@@ -64,6 +64,7 @@
             txtFolderPath.Location = new Point(28, 284);
             txtFolderPath.Multiline = true;
             txtFolderPath.Name = "txtFolderPath";
+            txtFolderPath.ReadOnly = true;
             txtFolderPath.Size = new Size(376, 81);
             txtFolderPath.TabIndex = 1;
             // 
