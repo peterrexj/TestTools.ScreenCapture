@@ -17,6 +17,7 @@ namespace TestTools.ScreenCapture.ViewModel
             watcher.Filter = "*.png";
             watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
             actionToCallbackOnForm = callbackOnView;
+            TextOnGenerateButton = "Generate Doc";
         }
 
         private string _targetImageStoreFolder;
@@ -73,6 +74,17 @@ namespace TestTools.ScreenCapture.ViewModel
         public string TextOnToggleCaptureButton => EnableCapture ? "Status: ON" : "Status: OFF";
         public Color ColorOnToggleCaptureButton => EnableCapture ? Color.PaleTurquoise : Color.LightPink;
 
+        private string _textOnGenerateButton;
+        public string TextOnGenerateButton
+        {
+            get { return _textOnGenerateButton; }
+            set
+            {
+                _textOnGenerateButton = value;
+                OnPropertyChanged("TextOnGenerateButton");
+            }
+        }
+
         public int _totalImagesCaptured;
         public int TotalImagesCaptured
         {
@@ -87,9 +99,9 @@ namespace TestTools.ScreenCapture.ViewModel
             }
         }
 
-        public bool IncludePdf { get; set; }    
-        public bool IncludeXaml { get; set; }    
-        public bool IncludeXps { get; set; }    
+        public bool IncludePdf { get; set; }
+        public bool IncludeXaml { get; set; }
+        public bool IncludeXps { get; set; }
         public bool IncludeHtml { get; set; }
     }
 }

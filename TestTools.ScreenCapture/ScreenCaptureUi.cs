@@ -1,7 +1,6 @@
 using Pj.Library;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using TestTools.ScreenCapture.Library;
 using TestTools.ScreenCapture.ViewModel;
 
@@ -63,9 +62,13 @@ namespace TestTools.ScreenCapture
 
         #endregion
 
+        private void RunOnMainThread(Action action)
+        {
+            this.BeginInvoke(action);
+        }
         private void EventOnFileWatch()
         {
-            this.BeginInvoke(() => viewModel?.ComputeTotalImageFiles());
+            RunOnMainThread(() => viewModel?.ComputeTotalImageFiles());
         }
         public ScreenCaptureUiViewModel viewModel;
         public ScreenCaptureUi()
@@ -85,6 +88,7 @@ namespace TestTools.ScreenCapture
                 chkIncludeHtml.DataBindings.Add(nameof(chkIncludeHtml.Checked), viewModel, nameof(viewModel.IncludeHtml), true, DataSourceUpdateMode.OnPropertyChanged);
                 chkIncludeXps.DataBindings.Add(nameof(chkIncludeXps.Checked), viewModel, nameof(viewModel.IncludeXps), true, DataSourceUpdateMode.OnPropertyChanged);
                 chkIncludeXaml.DataBindings.Add(nameof(chkIncludeXaml.Checked), viewModel, nameof(viewModel.IncludeXaml), true, DataSourceUpdateMode.OnPropertyChanged);
+                btnGenerateWordDoc.DataBindings.Add(nameof(btnGenerateWordDoc.Text), viewModel, nameof(viewModel.TextOnGenerateButton), true, DataSourceUpdateMode.OnPropertyChanged);
 
                 IoHelper.RecursiveDeleteFolder(_TempPath_ScreenshotPreview);
                 IoHelper.CreateDirectory(_TempPath_ScreenshotPreview);
@@ -267,43 +271,78 @@ namespace TestTools.ScreenCapture
                 ShowMessageError(ex.Message);
             }
         }
-        private void btnGenerateWordDoc_Click(object sender, EventArgs e)
+
+        private async void btnGenerateWordDoc_Click(object sender, EventArgs e)
         {
-            EventOnFileWatch();
-            if (viewModel.TotalImagesCaptured == 0)
+            var textOnButton = viewModel.TextOnGenerateButton;
+            var threadRename = new Thread(new ThreadStart(() =>
             {
-                ShowMessage("There are no images captured, folder is empty!");
-                return;
-            }
+                viewModel.TextOnGenerateButton = "Generating..";
+                RunOnMainThread(() => btnGenerateWordDoc.Enabled = false);
+            }));
+            var threadEnable = new Thread(new ThreadStart(() =>
+            {
+                viewModel.TextOnGenerateButton = textOnButton;
+                RunOnMainThread(() => btnGenerateWordDoc.Enabled = true);
+            }));
 
             try
             {
-                var inputFile = IoHelper.CombinePath(viewModel.TargetImageStoreFolder, $"InputTemplate.docx");
-                IoHelper.DeleteFile(inputFile);
-                using (FileStream inputStrm = File.Open(inputFile, FileMode.CreateNew))
-                using (Stream strm = AssemblyEx.GetEmbeddedResourceAsStream(PjUtility.Runtime.GetAssembly("TestTools.ScreenCapture"),
-                    $"TestTools.ScreenCapture.Library.input.docx"))
+                threadRename.Start();
+
+                EventOnFileWatch();
+                if (viewModel.TotalImagesCaptured == 0)
                 {
-                    strm.CopyTo(inputStrm);
+                    ShowMessage("There are no images captured, folder is empty!");
+                    return;
                 }
 
-                var outputFile = IoHelper.CombinePath(viewModel.TargetImageStoreFolder, $"OutputScreenshots_{DateTimeEx.GetTimestamp()}.docx");
-                AsposeWordHelper.GenerateWordDocWithImages(viewModel.TargetImageStoreFolder, inputFile, outputFile,
-                    viewModel.IncludePdf, viewModel.IncludeXaml, viewModel.IncludeHtml, viewModel.IncludeXaml);
-                IoHelper.DeleteFile(inputFile);
-                ShowMessage("Document generated and ready!");
+                try
+                {
+                    await Task.Run(() =>
+                    {
+                        RunOnMainThread(new Action(() =>
+                        {
+                            var inputFile = IoHelper.CombinePath(viewModel.TargetImageStoreFolder, $"InputTemplate.docx");
+                            IoHelper.DeleteFile(inputFile);
+                            using (FileStream inputStrm = File.Open(inputFile, FileMode.CreateNew))
+                            using (Stream strm = AssemblyEx.GetEmbeddedResourceAsStream(PjUtility.Runtime.GetAssembly("TestTools.ScreenCapture"),
+                                $"TestTools.ScreenCapture.Library.input.docx"))
+                            {
+                                strm.CopyTo(inputStrm);
+                            }
+
+                            var outputFile = IoHelper.CombinePath(viewModel.TargetImageStoreFolder, $"OutputScreenshots_{DateTimeEx.GetTimestamp()}.docx");
+                            AsposeWordHelper.GenerateWordDocWithImages(viewModel.TargetImageStoreFolder, inputFile, outputFile,
+                                viewModel.IncludePdf, viewModel.IncludeXaml, viewModel.IncludeHtml, viewModel.IncludeXaml);
+                            IoHelper.DeleteFile(inputFile);
+                            ShowMessage("Document generated and ready!");
+                        }));
+                    });
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageError(ex.Message);
+                }
+
+                try
+                {
+                    var psi = new ProcessStartInfo() { FileName = viewModel.TargetImageStoreFolder, UseShellExecute = true };
+                    Process.Start(psi);
+                }
+                catch (Exception)
+                {
+                }
             }
             catch (Exception ex)
             {
                 ShowMessageError(ex.Message);
             }
-
-            try
+            finally
             {
-                Process.Start(viewModel.TargetImageStoreFolder);
-            }
-            catch (Exception)
-            {
+                threadRename.Join();
+                threadEnable.Start();
+                threadEnable.Join();
             }
         }
 
@@ -314,7 +353,6 @@ namespace TestTools.ScreenCapture
             frmHelp.ShowDialog();
             this.Show();
         }
-
         private void btnAbout_Click(object sender, EventArgs e)
         {
             this.Hide();
