@@ -32,7 +32,7 @@ namespace TestTools.ScreenCapture
                 hotKeyId = GetHashCode();
                 if (!RegisterHotKey(this.Handle, hotKeyId, 0, (int)Keys.PrintScreen))
                 {
-                    MessageBox.Show("Failed to register hotkey", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Failed to register hotkey. Make sure that the [Print Screen] key is not already in use by another application", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
