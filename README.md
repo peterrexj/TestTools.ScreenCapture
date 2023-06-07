@@ -1,5 +1,5 @@
 # TestTools.ScreenCapture
-![Build](https://github.com/peterrexj/TestTools.ScreenCapture/actions/workflows/Create dotnet-desktop.yml/badge.svg)
+![Build](https://github.com/peterrexj/TestTools.ScreenCapture/actions/workflows/Create%20dotnet-desktop.yml/badge.svg)
 This is a very simple tool to capture screenshots and consolidate into a word or pdf document. Can be used for many purposes from manual testing artefacts collection or use of capturing screenshots and consolidate requirement.
 
 Uses Win Forms, C#, and .NET 6.0 (as our team was using Windows OS) to create a tool with the following features:
