@@ -3,7 +3,9 @@
 
 ![Build](https://github.com/peterrexj/TestTools.ScreenCapture/actions/workflows/dotnet-desktop.yml/badge.svg)
 
-Access the most recent assets at this location
+Access the most recent assets at this location 
+<a href="https://raw.githubusercontent.com/peterrexj/TestTools.ScreenCapture/master/Assets/TestTools.ScreenCapture.zip">Tool Download (zip)</a>
+
 <div style="float: left; margin-right: 10px;">
 <img src="https://github.com/peterrexj/TestTools.ScreenCapture/assets/10838987/13e5a99d-3a7f-48d6-a3d8-8161142fd3e0" alt="Alt Text" style="width:50px;height:50px;" />
 </div>
